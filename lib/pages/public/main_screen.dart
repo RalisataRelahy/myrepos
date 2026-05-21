@@ -1,7 +1,5 @@
 // ignore_for_file: deprecated_member_use
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:medilink_app/pages/doctor_page/appointement.dart';
@@ -9,7 +7,7 @@ import 'package:medilink_app/pages/doctor_page/dashboard.dart';
 import 'package:medilink_app/pages/doctor_page/patient_list_page.dart';
 
 import 'package:medilink_app/pages/patient_page/self_patient_profil.dart'; // ← à renommer plus tard ?
-
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:medilink_app/pages/doctor_page/self_doctor_profil.dart';
 import 'package:medilink_app/pages/patient_page/home_page.dart';
 import 'package:medilink_app/pages/patient_page/medecin_list_page.dart';
@@ -49,14 +47,20 @@ class _MainNavigationState extends State<MainNavigation>
     _loadUserRole();
   }
 
+  Future<Map<String, dynamic>?> getProfile() async {
+    final user = supabase.auth.currentUser;
+
+    final data = await supabase
+        .from('users')
+        .select()
+        .eq('id', user!.id)
+        .single();
+
+    return data;
+  }
+
   Future<void> _loadUserRole() async {
     try {
-      // Vérification patient
-      final patientSnap = await FirebaseFirestore.instance
-          .collection('patients')
-          .doc(widget.uid)
-          .get();
-
       if (patientSnap.exists) {
         _initForPatient();
         return;

@@ -1,9 +1,9 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:medilink_app/controllers/signin_controller.dart';
 import 'package:medilink_app/pages/doctor_page/dashboard.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Formulaire extends StatefulWidget {
   const Formulaire({super.key});
@@ -229,41 +229,18 @@ class _FormulaireState extends State<Formulaire> with TickerProviderStateMixin {
     }
     setState(() => isLoading = true);
     try {
-      final credential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-            email: emailController.text.trim(),
-            password: passwordController.text.trim(),
-          );
-      final uid = credential.user!.uid;
-      await FirebaseFirestore.instance.collection('users').doc(uid).set({
-        'role': 'doctor',
-      });
-      await FirebaseFirestore.instance.collection('doctors').doc(uid).set({
-        'uid': uid,
-        'firstName': firstNameController.text.trim(),
-        'lastName': lastNameController.text.trim(),
-        'dateOfBirth': Timestamp.fromDate(_birthDate!),
-        'address': addressController.text.trim(),
-        'phone': phoneController.text.trim(),
-        'email': emailController.text.trim(),
-        'speciality': _specialities,
-        'diplomaLevel': _diplomas,
-        'languages': _languages,
-        'yearsOfExperience':
-            int.tryParse(yearsOfExperienceController.text.trim()) ?? 0,
-        'licenseNumber': licenseNumberController.text.trim(),
-        'clinicName': clinicNameController.text.trim(),
-        'consultationFee': double.tryParse(
-          consultationFeeController.text.trim(),
-        ),
-        'bio': bioController.text.trim().isEmpty
-            ? null
-            : bioController.text.trim(),
-        'rating': 0,
-        'accountStatus': 'pending',
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      String email=emailController.text.trim();
+      String password=passwordController.text.trim();
+      String firstName=firstNameController.text.trim();
+      String lastName=lastNameController.text.trim();
+      DateTime? dateOfBirth=_birthDate;
+      String phone=phoneController.text.trim();
+      String address=addressController.text.trim();
+      String yearsOfExperience=yearsOfExperienceController.text.trim();
+      String licenseNumber=licenseNumberController.text.trim();
+      String bio=bioController.text.trim();
+      String genderString=gender.toString();
+      SigninController.signUpDoctor(email: email, password: password, firstName: firstName, lastName: lastName, dateOfBirth: dateOfBirth, phone: phone, address: address, yearsOfExperience: int.parse(yearsOfExperience), bio: bio , gender: genderString, licenseNumber: licenseNumber);
       if (!mounted) return;
       _showSnack("Doctor registered successfully!");
       Navigator.pushReplacement(

@@ -3,7 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:medilink_app/models/prescription_model.dart';
+import 'package:medilink_app/models/medicale_model/prescription_model.dart';
 
 class PrescriptionDetailPage extends StatelessWidget {
   final String prescriptionId;

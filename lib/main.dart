@@ -1,16 +1,19 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:medilink_app/pages/get_started_page.dart';
 import 'package:medilink_app/pages/public/main_screen.dart';
 import 'package:medilink_app/pages/splash_page.dart';
-import 'firebase_options.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'controllers/user_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Supabase.initialize(
+    url: 'https://efhhcmtwdshrgsltgzqg.supabase.co',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmaGhjbXR3ZHNocmdzbHRnenFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMTA4NzYsImV4cCI6MjA5NDY4Njg3Nn0.OB7yyDyJPXPWTq8pRLeGIQzVrCRYofwf7xR-JHF0CS4',
+  );
   runApp(MyApp());
 }
 
@@ -33,44 +36,43 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
+    final supabase = Supabase.instance.client;
+
+    return StreamBuilder<AuthState>(
+      stream: supabase.auth.onAuthStateChange,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+
+        // ⏳ loading
+        if (!snapshot.hasData) {
           return const SplashPage();
         }
-        final user = snapshot.data;
 
+        final session = snapshot.data!.session;
+        final user = session?.user;
+
+        // ❌ pas connecté
         if (user == null) {
-          return const IntroPage(); // ou LoginPage()
+          return const IntroPage();
         }
-        // L'utilisateur est connecté → on vérifie le rôle (asynchrone)
+
+        // ✅ connecté → check rôle
         return FutureBuilder<Widget>(
-          future: _getRoleBasedHome(user.uid),
+          future: _getRoleBasedHome(user.id),
           builder: (context, roleSnapshot) {
             if (roleSnapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
+
             return roleSnapshot.data ?? const IntroPage();
           },
         );
       },
     );
   }
+}
 
   Future<Widget> _getRoleBasedHome(String uid) async {
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .get();
-
-    if (!doc.exists) {
-      await FirebaseAuth.instance.signOut();
-      return const IntroPage();
-    }
-
-    final role = doc.data()?['role'];
-
+    final role= await UserService.getRole(uid);
     if (role == 'patient') {
       return MainNavigation(uid: uid);
     }
@@ -79,7 +81,8 @@ class AuthWrapper extends StatelessWidget {
       return MainNavigation(uid: uid);
     }
 
-    await FirebaseAuth.instance.signOut();
+    final supabase=Supabase.instance.client;
+    await supabase.auth.signOut();
     return const IntroPage();
   }
-}
+

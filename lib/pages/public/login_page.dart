@@ -4,10 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:medilink_app/pages/doctor_page/signin_doctor.dart';
 import 'package:medilink_app/pages/patient_page/signin_page_patient.dart';
 import 'package:medilink_app/pages/public/main_screen.dart';
-
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:developer';
+
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Login extends StatefulWidget {
   final String? role;
@@ -102,78 +101,72 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
     setState(() => isLoading = true);
 
     try {
-      final userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: email, password: pwd);
+      final supabase = Supabase.instance.client;
 
-      final user = userCredential.user;
-      if (user == null) throw Exception('Utilisateur non récupéré');
-      final userConnecter = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      if (userConnecter['role'] == "patient") {
-        final docSnapshot = await FirebaseFirestore.instance
-            .collection('patients')
-            .doc(user.uid)
-            .get();
-        if (!docSnapshot.exists) {
-          await FirebaseAuth.instance.signOut();
-          _showError(
-            'Compte non trouvé dans la base patients. Inscrivez-vous d\'abord.',
-          );
-          return;
-        }
+      final res = await supabase.auth.signInWithPassword(
+        email: email,
+        password: pwd,
+      );
 
-        if (!mounted) return;
+      final user = res.user ?? res.session?.user;
+
+      if (user == null) {
+        throw Exception('Utilisateur non récupéré');
+      }
+
+// récupérer rôle
+      final data = await supabase
+          .from('user_roles')
+          .select('roles(name)')
+          .eq('user_id', user.id)
+          .single();
+
+      final role = data['roles']['name'];
+
+      if (role == 'patient') {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => MainNavigation(uid: user.uid)),
-        );
-      } else if (userConnecter['role'] == "doctor") {
-        final docSnapshot = await FirebaseFirestore.instance
-            .collection('doctors')
-            .doc(user.uid)
-            .get();
-        if (!docSnapshot.exists) {
-          await FirebaseAuth.instance.signOut();
-          _showError(
-            'Compte non trouvé dans la base docteurs. Inscrivez-vous d\'abord.',
-          );
-          return;
-        }
-
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => MainNavigation(uid: user.uid)),
+          MaterialPageRoute(
+            builder: (_) => MainNavigation(uid: user.id),
+          ),
         );
       }
-    } on FirebaseAuthException catch (e) {
+      else if (role == 'doctor') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => MainNavigation(uid: user.id),
+          ),
+        );
+      }
+    } on AuthException catch (e) {
       String message;
-      switch (e.code) {
-        case 'user-not-found':
-          message = 'Aucun compte trouvé avec cet email.';
+
+      switch (e.message) {
+        case 'Invalid login credentials':
+          message = 'Email ou mot de passe incorrect.';
           break;
-        case 'wrong-password':
-          message = 'Mot de passe incorrect.';
+
+        case 'Email not confirmed':
+          message = 'Veuillez confirmer votre email avant de vous connecter.';
           break;
-        case 'invalid-email':
-          message = 'Format d\'email invalide.';
-          break;
-        case 'user-disabled':
-          message = 'Ce compte a été désactivé.';
-          break;
+
         default:
           message = 'Erreur d\'authentification : ${e.message}';
       }
+
       _showError(message);
-    } on FirebaseException catch (e) {
-      _showError('Erreur Firestore : ${e.message}');
+
+    } on PostgrestException catch (e) {
+      _showError('Erreur base de données : ${e.message}');
+
     } catch (e) {
       _showError('Erreur inattendue. Veuillez réessayer.');
       log('Login error: $e', name: 'auth');
     } finally {
-      if (mounted) setState(() => isLoading = false);
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 

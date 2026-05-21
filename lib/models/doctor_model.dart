@@ -1,110 +1,71 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Doctor {
-  // Référence
-  final String uid;
+  // Identity
+  final String id; // = auth.users.id
 
-  // Infos personnelles
+  // Personal info
   final String firstName;
   final String lastName;
-  final Timestamp dateOfBirth;
-  final String address;
-  final String phone;
   final String email;
+  final String phone;
 
-  // Infos professionnelles
+  final DateTime dateOfBirth;
+
+  // Professional info
   final String licenseNumber;
-  final List<String> diplomaLevel;
   final int yearsOfExperience;
-  final List<String> speciality;
-
-  // Général
-  final List<String> languages;
   final String? bio;
-  final double rating;
 
-  // Cabinet
-  final String clinicName;
-  final double? consultationFee;
+  // Status
+  final String accountStatus; // pending | verified | suspended
 
-  // Statut compte
-  final String accountStatus; // "pending", "verified", "suspended"
-
-  // Dates
-  final Timestamp createdAt;
-  final Timestamp updatedAt;
+  // Timestamps
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   Doctor({
-    required this.uid,
+    required this.id,
     required this.firstName,
     required this.lastName,
-    required this.dateOfBirth,
-    required this.address,
-    required this.phone,
     required this.email,
+    required this.phone,
+    required this.dateOfBirth,
     required this.licenseNumber,
-    required this.diplomaLevel,
     required this.yearsOfExperience,
-    required this.speciality,
-    required this.languages,
     this.bio,
-    required this.rating,
-    required this.clinicName,
-    this.consultationFee,
     required this.accountStatus,
     required this.createdAt,
     required this.updatedAt,
   });
 
-  // Conversion depuis Firestore
-  factory Doctor.fromMap(Map<String, dynamic> data) {
+  factory Doctor.fromMap(Map<String, dynamic> json) {
     return Doctor(
-      uid: data['uid'],
-      firstName: data['firstName'],
-      lastName: data['lastName'],
-      dateOfBirth: data['dateOfBirth'],
-      address: data['address'],
-      phone: data['phone'],
-      email: data['email'],
-      licenseNumber: data['licenseNumber'],
-      diplomaLevel: List<String>.from(data['diplomaLevel']),
-      yearsOfExperience: data['yearsOfExperience'],
-      speciality: List<String>.from(data['speciality']),
-      languages: List<String>.from(data['languages']),
-      bio: data['bio'],
-      rating: (data['rating'] as num).toDouble(),
-      clinicName: data['clinicName'],
-      consultationFee: data['consultationFee'] != null
-          ? (data['consultationFee'] as num).toDouble()
-          : null,
-      accountStatus: data['accountStatus'],
-      createdAt: data['createdAt'],
-      updatedAt: data['updatedAt'],
+      id: json['id'],
+      firstName: json['first_name'],
+      lastName: json['last_name'],
+      email: json['email'],
+      phone: json['phone'],
+      dateOfBirth: DateTime.parse(json['date_of_birth']),
+      licenseNumber: json['license_number'],
+      yearsOfExperience: json['years_of_experience'],
+      bio: json['bio'],
+      accountStatus: json['account_status'],
+      createdAt: DateTime.parse(json['created_at']).toLocal(),
+      updatedAt: DateTime.parse(json['updated_at']).toLocal(),
     );
   }
 
-  // Conversion vers Firestore
   Map<String, dynamic> toMap() {
     return {
-      'uid': uid,
-      'firstName': firstName,
-      'lastName': lastName,
-      'dateOfBirth': dateOfBirth,
-      'address': address,
-      'phone': phone,
+      'id': id,
+      'first_name': firstName,
+      'last_name': lastName,
       'email': email,
-      'licenseNumber': licenseNumber,
-      'diplomaLevel': diplomaLevel,
-      'yearsOfExperience': yearsOfExperience,
-      'speciality': speciality,
-      'languages': languages,
+      'phone': phone,
+      'date_of_birth': dateOfBirth.toIso8601String(),
+      'license_number': licenseNumber,
+      'years_of_experience': yearsOfExperience,
       'bio': bio,
-      'rating': rating,
-      'clinicName': clinicName,
-      'consultationFee': consultationFee,
-      'accountStatus': accountStatus,
-      'createdAt': createdAt,
-      'updatedAt': updatedAt,
+      'account_status': accountStatus,
     };
   }
 }

@@ -1,37 +1,17 @@
 class Diagnostic {
-  final String id; // identifiant unique
-  final String name; // nom du diagnostic
-  final String? description; // détails optionnels
-  final String? severity; // "léger", "modéré", "grave"
-  final bool confirmed; // vrai si confirmé
+  final String id;
+  final String consultationId;
+
+  final String description;
+  final String severity;
+
+  final DateTime createdAt;
 
   Diagnostic({
     required this.id,
-    required this.name,
-    this.description,
-    this.severity,
-    required this.confirmed,
+    required this.consultationId,
+    required this.description,
+    required this.severity,
+    required this.createdAt,
   });
-
-  // Conversion depuis Firestore / Map
-  factory Diagnostic.fromMap(Map<String, dynamic> data) {
-    return Diagnostic(
-      id: data['id'],
-      name: data['name'],
-      description: data['description'],
-      severity: data['severity'],
-      confirmed: data['confirmed'],
-    );
-  }
-
-  // Conversion vers Firestore / Map
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'description': description,
-      'severity': severity,
-      'confirmed': confirmed,
-    };
-  }
 }
