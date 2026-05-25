@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:medilink_app/models/medicale_model/prescription_model.dart';
-import 'package:medilink_app/models/treatments_model.dart';
+import 'package:medilink_app/models/medicale_model/treatments_model.dart';
 
 class PrescriptionPage extends StatefulWidget {
   const PrescriptionPage({super.key});

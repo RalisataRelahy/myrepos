@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:medilink_app/controllers/signin_controller.dart';
 
 import 'package:medilink_app/pages/public/main_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -33,9 +34,9 @@ class _PatientSignupPageState extends State<PatientSignupPage>
   final _emergencyNameCtrl = TextEditingController();
   final _emergencyPhoneCtrl = TextEditingController();
 
-  String? _gender;
+  late String _gender;
   String? _bloodType;
-  DateTime? _birthDate;
+  late DateTime _birthDate;
 
   final _bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
@@ -237,44 +238,9 @@ class _PatientSignupPageState extends State<PatientSignupPage>
   // ====================== SOUMISSION ======================
   Future<void> _submit() async {
     setState(() => _isLoading = true);
+    String uid;
     try {
-      final supabase=Supabase.instance.client;
-      final res=await supabase.auth.signUp(
-        email: _emailCtrl.text.trim(),
-        password: _passwordCtrl.text.trim(),
-      );
-      final uid = res.user!.id;
-      await supabase.from('profiles').insert({
-        'id':uid,
-        'first_name':_firstNameCtrl.text.trim(),
-        'last_name':_lastNameCtrl.text.trim(),
-      });
-      await supabase.from('user_roles').insert({
-        'user_id':uid,
-        'role_id':1,//1:patient, 2:doctor, 3:admin
-      });
-
-      await supabase.from('patients').insert({
-        'id':uid,
-        'gender':_gender,
-        'date_of_birth':_birthDate,
-        'phone': _phoneCtrl.text.trim(),
-        'email': _emailCtrl.text.trim(),
-        'address': _addressCtrl.text.trim().isEmpty
-            ? null
-            : _addressCtrl.text.trim(),
-        'bloodType': _bloodType,
-        'height': double.tryParse(_heightCtrl.text.trim()),
-        'weight': double.tryParse(_weightCtrl.text.trim()),
-        'emergencyContactName': _emergencyNameCtrl.text.trim().isEmpty
-            ? null
-            : _emergencyNameCtrl.text.trim(),
-        'emergencyContactPhone': _emergencyPhoneCtrl.text.trim().isEmpty
-            ? null
-            : _emergencyPhoneCtrl.text.trim(),
-        'consultingNumber': 0,
-        'accountStatus': 'active',
-      });
+      uid=await SigninController.signUpPatient(email: _emailCtrl.text.trim(), password: _passwordCtrl.text.trim(), firstName: _firstNameCtrl.text.trim(), lastName: _lastNameCtrl.text.trim(), dateOfBirth: _birthDate, gender: _gender, phone: _phoneCtrl.text.trim());
       if (!mounted) return;
       setState(() {
         _isLoading = false;
@@ -285,12 +251,7 @@ class _PatientSignupPageState extends State<PatientSignupPage>
       );
     }catch (e) {
       String msg = 'Erreur lors de la création du compte';
-      if (e.code == 'email-already-in-use') msg = 'Cet email est déjà utilisé';
-      if (e.code == 'weak-password') msg = 'Mot de passe trop faible';
-      if (e.code == 'invalid-email') msg = 'Email invalide';
       if (mounted) _showSnack(msg);
-    } catch (e) {
-      if (mounted) _showSnack('Erreur inattendue : $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

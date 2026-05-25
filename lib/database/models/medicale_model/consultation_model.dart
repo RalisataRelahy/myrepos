@@ -1,7 +1,7 @@
 class Consultation {
-  final String id;
-  final String patientId;
-  final String doctorId;
+  final String id;//primaryKey
+  final String patientId;//foreignKey
+  final String doctorId;//foreignKey
 
   final DateTime date;
   final String type; // presencial | urgent

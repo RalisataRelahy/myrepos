@@ -1,9 +1,9 @@
 // ignore_for_file: prefer_typing_uninitialized_variables, strict_top_level_inference, deprecated_member_use
 
 import 'dart:convert';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:medilink_app/controllers/user_service.dart';
 
 class AIBanner extends StatefulWidget {
   final currentUser;
@@ -34,7 +34,7 @@ class _AIBannerState extends State<AIBanner> {
 
   Future<void> _callAiApi() async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
+      final user=UserService.getCurrentUser();
       if (user == null) {
         setState(() {
           _error = 'Non connecté';
@@ -43,7 +43,7 @@ class _AIBannerState extends State<AIBanner> {
         return;
       }
 
-      final idToken = await user.getIdToken();
+      final idToken = await user.id;
       final url = Uri.parse('https://moduleia-production-56.up.railway.app/AI');
 
       final response = await http.post(

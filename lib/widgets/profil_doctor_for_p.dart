@@ -1,21 +1,29 @@
 // ignore_for_file: deprecated_member_use
-
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 
-class DoctorProfile extends StatelessWidget {
+class DoctorProfile extends StatefulWidget {
   final String doctorId;
 
   const DoctorProfile({super.key, required this.doctorId});
 
   @override
+  State<DoctorProfile> createState() => _DoctorProfileState();
+}
+
+class _DoctorProfileState extends State<DoctorProfile> {
+  Future<Map<String, dynamic>?> _getProfile() async {
+    final supabase = Supabase.instance.client;
+    final res=await supabase.from('profiles').select('first_name, last_name').eq('id', widget.doctorId).single();
+    return res;
+  }
+  @override
   Widget build(BuildContext context) {
+    final supabase=Supabase.instance.client;
+
     return Scaffold(
-      body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance
-            .collection('doctors')
-            .doc(doctorId)
-            .get(),
+      body: FutureBuilder<Map<String, dynamic>?>(
+        future: _getProfile(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
@@ -23,16 +31,16 @@ class DoctorProfile extends StatelessWidget {
             );
           }
 
-          if (!snapshot.hasData || !snapshot.data!.exists) {
+          if (!snapshot.hasData || snapshot.data==null) {
             return Scaffold(
               appBar: AppBar(title: const Text("Profil du médecin")),
               body: const Center(child: Text("Médecin introuvable")),
             );
           }
 
-          final data = snapshot.data!.data() as Map<String, dynamic>;
+          final data = snapshot.data as Map<String, dynamic>;
 
-          return _DoctorProfileContent(data: data, doctorId: doctorId);
+          return _DoctorProfileContent(data: data, doctorId: widget.doctorId);
         },
       ),
     );

@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import 'package:medilink_app/models/patient_model.dart'; // ← ton modèle Patient
+import 'package:medilink_app/models/patient/patient_model.dart'; // ← ton modèle Patient
 import 'package:medilink_app/pages/doctor_page/profil_patient_for_d.dart';
 
 class PatientListScreen extends StatefulWidget {

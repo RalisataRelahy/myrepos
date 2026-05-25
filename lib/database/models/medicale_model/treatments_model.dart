@@ -1,11 +1,11 @@
-class Treatment {
+class Medication{
   final String medicationName;
   final String dosage; // ex: "500mg"
   final String frequency; // ex: "2 times per day"
   final int durationInDays;
   final String? instructions; // ex: "After meals"
 
-  Treatment({
+  Medication({
     required this.medicationName,
     required this.dosage,
     required this.frequency,
@@ -14,8 +14,8 @@ class Treatment {
   });
 
   // Conversion depuis Firestore / Map
-  factory Treatment.fromMap(Map<String, dynamic> data) {
-    return Treatment(
+  factory Medication.fromMap(Map<String, dynamic> data) {
+    return Medication(
       medicationName: data['medicationName'],
       dosage: data['dosage'],
       frequency: data['frequency'],

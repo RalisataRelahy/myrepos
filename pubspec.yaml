@@ -74,7 +74,7 @@ flutter:
     - assets/images/logoIspm.png 
     - assets/images/logo.png
     - assets/lotties/offline.json
-
+    - assets/lotties/success_send.json
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

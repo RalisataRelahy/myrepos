@@ -2,7 +2,6 @@ class Prescription {
   final String id;
   final String consultationId;
   final String patientId;
-
   final String? description;
   final String fileUrl;
 
